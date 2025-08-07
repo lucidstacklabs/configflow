@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lucidstacklabs/configflow/internal/app/configflow/admin"
 	"github.com/lucidstacklabs/configflow/internal/app/configflow/apikey"
+	"github.com/lucidstacklabs/configflow/internal/app/configflow/environment"
 	"github.com/lucidstacklabs/configflow/internal/app/configflow/health"
 	"github.com/lucidstacklabs/configflow/internal/pkg/auth"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -53,6 +54,7 @@ func (s *Server) Start() {
 	authenticator := auth.NewAuthenticator(s.config.JwtSigningKey, s.config.JwtIssuer, s.config.JwtAudience, apiKeysCollection)
 	adminService := admin.NewService(mongoDatabase.Collection("admins"), authenticator)
 	apiKeyService := apikey.NewService(apiKeysCollection)
+	environmentService := environment.NewService(mongoDatabase.Collection("environments"))
 
 	// API server setup
 
@@ -61,6 +63,7 @@ func (s *Server) Start() {
 	health.NewHandler(router).Register()
 	admin.NewHandler(router, authenticator, adminService).Register()
 	apikey.NewHandler(router, authenticator, apiKeyService).Register()
+	environment.NewHandler(router, authenticator, environmentService).Register()
 
 	log.Printf("starting api server on %s:%s", s.config.Host, s.config.Port)
 
